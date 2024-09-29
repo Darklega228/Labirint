@@ -16,6 +16,10 @@ int main()
 	int energy = 500;
 	int movesSinceLastCoffee = 0;
 
+	int bombX = -1;
+	int bombY = -1;
+	bool bombPlanted = false;
+
 	system("title Бомбер гена!");
 	// запуск алгоритма генерации случайных чисел
 	srand(time(0));
@@ -142,12 +146,48 @@ int main()
 
 		switch (code) 
 		{
-		case ENTER:
-			//cout << "ENTER\n";
-			//break;
-		case SPACEBAR:
-			//cout << "SPACEBAR\n";
-			//break;
+		case ENTER: //установить бомбу
+			if (energy >= 49 && !bombPlanted)
+			{
+				bombX = position.X;
+				bombY = position.Y;
+				bombPlanted = true;
+				energy -= 49;
+				SetConsoleCursorPosition(h, { (SHORT)bombX, (SHORT)bombY });
+				SetConsoleTextAttribute(h, RED);
+				cout << (char)15;  //символ бомбы
+			}
+			break;
+		case SPACEBAR: // взорвать бомбу
+			if (bombPlanted && energy >= 1)
+			{
+				energy -= 1;
+				bombPlanted = false;
+				for (int dy = -3; dy <= 3; dy++)
+				{
+					for (int dx = -3; dx <= 3; dx++)
+					{
+						int targetX = bombX + dx;
+						int targetY = bombY + dy;
+						if (targetX >= 0 && targetX < WIDTH && targetY >= 0 && targetY < HEIGHT)
+						{
+							if (location[targetY][targetX] != HALL)
+							{
+								location[targetY][targetX] = HALL;
+								SetConsoleCursorPosition(h, { (SHORT)targetX, (SHORT)targetY });
+								cout << " ";
+							}
+						}
+						// проверка на игрока
+						if (targetX == position.X && targetY == position.Y)
+						{
+							MessageBoxA(NULL, "Вы взорвались на собственной бомбе", "Game Over", MB_OK | MB_ICONERROR);
+							return 0;
+						}
+					}
+				}
+			}
+			break;
 		case ESCAPE:
 			//cout << "ESCAPE\n";
 			//break;
@@ -241,7 +281,6 @@ int main()
 				location[position.Y][position.X] = HALL;
 			}
 		}
-
 	}
 }
 
