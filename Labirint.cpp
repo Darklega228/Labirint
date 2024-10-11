@@ -15,6 +15,7 @@ int main()
 	int health = 100;
 	int energy = 500;
 	int movesSinceLastCoffee = 0;
+	int enemyCount = 0;
 
 	int bombX = -1;
 	int bombY = -1;
@@ -49,6 +50,7 @@ int main()
 	// 2 - монетки
 	// 3 - враги
 	// 4 - аптечка
+	// 5 - коффе
 
 	// генерация локации
 	for (int y = 0; y < HEIGHT; y++) // перебор строк
@@ -66,13 +68,13 @@ int main()
 			if (x == 0 && y == 2 || x == WIDTH - 1 && y == HEIGHT - 3)
 				location[y][x] = 0;
 
-			if (location[y][x] == 3) 
+			if (location[y][x] == ENEMY) 
 			{
-				// определяется вероятность того, останется враг или нет
-				// допустим, вероястность остаться на уровне - 10%
-				int prob = rand() % 10; // 0-9
-				if (prob != 0) // 1 2 3 4 5 6 7 8 9
+				int prob = rand() % 10;
+				if (prob != 0)
 					location[y][x] = 0;
+				else
+					enemyCount++;  // Подсчет врагов
 			}
 
 			if (location[y][x] == COIN) 
@@ -105,7 +107,7 @@ int main()
 				SetConsoleTextAttribute(h, RED);
 				cout << (char)1;
 				break;
-			case MEDICINE: // Показ лекарства
+			case MEDICINE: // лекарства
 				SetConsoleTextAttribute(h, WHITE);
 				cout << (char)3;
 				break;
@@ -132,7 +134,7 @@ int main()
 	while (true) 
 	{
 
-		string title = "Здоровье: " + to_string(health) + "%, Энергия: " + to_string(energy);
+		string title = "lives: " + to_string(health) + "%, Energy: " + to_string(energy);
 		SetConsoleTitleA(title.c_str());
 
 		int code = _getch();
@@ -163,9 +165,9 @@ int main()
 			{
 				energy -= 1;
 				bombPlanted = false;
-				for (int dy = -3; dy <= 3; dy++)
+				for (int dy = -1; dy <= 1; dy++)
 				{
-					for (int dx = -3; dx <= 3; dx++)
+					for (int dx = -1; dx <= 1; dx++)
 					{
 						int targetX = bombX + dx;
 						int targetY = bombY + dy;
@@ -235,9 +237,7 @@ int main()
 			// Проверка на победу
 			if (coins == totalCoins) 
 			{
-				SetConsoleCursorPosition(h, { 0, HEIGHT + 1 });
-				SetConsoleTextAttribute(h, GREEN);
-				cout << "Победа - все монеты собраны!" << endl;
+				MessageBoxA(NULL, "Victory", "Congratulations!", MB_OK | MB_ICONINFORMATION);
 				return 0; // Завершение игры
 			}
 		}
@@ -252,7 +252,18 @@ int main()
 		{
             int damage = 20 + rand() % 6; // Урон от 20 до 25%
             health -= damage;
-            location[position.Y][position.X] = HALL;
+			if (health < 0) 
+			{
+				health = 0;
+			}
+			location[position.Y][position.X] = HALL;
+			enemyCount--;
+
+			if (enemyCount == 0) // Если врагов нету
+			{
+				MessageBoxA(NULL, "Victory", "Congratulations!", MB_OK | MB_ICONINFORMATION);
+				return 0;
+			}
 
             // Проверка на проигрыш
             if (health <= 0) 
